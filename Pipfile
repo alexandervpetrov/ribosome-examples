@@ -1,0 +1,21 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[requires]
+python_full_version = "3.8.0"
+
+[packages]
+Flask = "~=1.1.1"
+Django = "~=2.2.7"
+gunicorn = "*"
+click = "*"
+"ruamel.yaml" = "*"
+jinja2 = "*"
+coloredlogs = "*"
+
+[dev-packages]
+pycodestyle = "*"
+rope = "*"
+"ribosome.tool" = "*"

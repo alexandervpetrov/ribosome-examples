@@ -1,3 +1,16 @@
+# ===================================================================
+# This project
+# ===================================================================
+
+.vscode/
+.pytest_cache
+meta.py
+project_static
+
+# ===================================================================
+# Defaults for Python from Github
+# ===================================================================
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -73,7 +86,7 @@ target/
 .ipynb_checkpoints
 
 # pyenv
-.python-version
+# .python-version
 
 # celery beat schedule file
 celerybeat-schedule
