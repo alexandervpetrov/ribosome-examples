@@ -1,0 +1,17 @@
+
+common:
+  description: Sample Web Application
+  run: manage.py runserver
+  WSGI_MODULE: djangosite.mysite.wsgi
+
+  actions:
+    migrate: djangosite/manage.py migrate
+
+
+configs:
+
+  dev:
+    targetroot: /srv/example/dev
+    SOCKET_NAME: example.webapp.dev.socket
+    env:
+      DJANGO_SETTINGS_MODULE: djangosite.mysite.settings

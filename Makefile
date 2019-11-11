@@ -21,6 +21,13 @@ devsetup:  ## Make runtime environment for development
 	-@pipenv check
 
 
+run: clean  ## Run Django application
+	@echo "Updating version info ..."
+	@pipenv run ribosome version update
+	@echo "Running Django application ..."
+	@pipenv run ./djangosite/manage.py runserver
+
+
 clean:  ## Remove bytecode, cache, build and run files
 	@echo "Removing bytecode, cache, build and run files..."
 	@rm -rf `find . -name __pycache__`
@@ -35,13 +42,21 @@ clean:  ## Remove bytecode, cache, build and run files
 
 codestyle:  ## Check code style
 	@echo "Checking code style..."
-	# @pipenv run pycodestyle ribosome --ignore=E501
+	@pipenv run pycodestyle djangosite --ignore=E501
 	@pipenv run pycodestyle *.py --ignore=E501
 
 
-build:  ## Build project
-	@echo "Building project..."
-	-@pipenv check
+collectstatic:  ## Collect static files
+	@pipenv run ./djangosite/manage.py collectstatic --noinput
+
+
+cleanstatic:  ## Remove collected static files
+	@echo "Removing collected static files..."
+	@rm -rf djangosite/project_static
+
+
+build: cleanstatic clean collectstatic  ## Build project
+	@echo "Project built"
 
 
 test:  ## Run tests

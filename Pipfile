@@ -17,5 +17,7 @@ coloredlogs = "*"
 
 [dev-packages]
 pycodestyle = "*"
+pylint = "*"
+pytest = "*"
 rope = "*"
 "ribosome.tool" = "*"

@@ -1,0 +1,24 @@
+[Unit]
+Description={{ description }}
+
+[Service]
+Restart=always
+RestartSec=2
+
+{% for k, v in env.items() -%}
+Environment={{ k }}={{ v }}
+{%- endfor %}
+
+WorkingDirectory={{ HOME }}
+
+ExecStartPre=/bin/mkdir -p {{ LOGGING_DIR }}
+ExecStartPre=/bin/mkdir -p /var/log/gunicorn/example
+ExecStart=/bin/bash -c 'exec \
+  {{ GUNICORN_CMD }} {{ WSGI_MODULE }}:application --bind unix:/run/{{ SOCKET_NAME }} --config {{ GUNICORN_CONFIG_PATH }} \
+  --access-logfile /var/log/gunicorn/example/{{ SERVICE }}.{{ CONFIG }}.access.log \
+  --error-logfile /var/log/gunicorn/example/{{ SERVICE }}.{{ CONFIG }}.error.log \
+  >> {{ LOGGING_DIR }}/{{ SERVICE }}.{{ CONFIG }}.log \
+  2>&1'
+
+[Install]
+WantedBy=multi-user.target

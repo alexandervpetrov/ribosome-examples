@@ -1,0 +1,22 @@
+[Unit]
+Description={{ description }}
+
+[Service]
+Restart=always
+RestartSec=2
+RuntimeMaxSec=86400
+
+{% for k, v in env.items() -%}
+Environment={{ k }}={{ v }}
+{%- endfor %}
+
+WorkingDirectory={{ HOME }}
+
+ExecStartPre=/bin/mkdir -p {{ LOGGING_DIR }}
+ExecStart=/bin/bash -c 'exec \
+  {{ PYTHON_CMD }} {{ HOME }}/manage.py {{ DJANGO_MANAGE_ARGS }} \
+  >> {{ LOGGING_DIR }}/{{ SERVICE }}.{{ CONFIG }}.log \
+  2>&1'
+
+[Install]
+WantedBy=multi-user.target
