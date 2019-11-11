@@ -370,7 +370,7 @@ def start(service, config):
         if error is not None:
             print_error(error)
             sys.exit(1)
-    print('Service started:', systemd_name)
+        print('Service started:', systemd_name)
 
 
 @cli.command()
@@ -385,7 +385,7 @@ def stop(service, config):
         if error is not None:
             print_error(error)
             sys.exit(1)
-    print('Service stopped:', systemd_name)
+        print('Service stopped:', systemd_name)
 
 
 if __name__ == '__main__':
