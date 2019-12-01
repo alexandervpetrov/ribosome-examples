@@ -21,11 +21,19 @@ devsetup:  ## Make runtime environment for development
 	-@pipenv check
 
 
-run: clean  ## Run Django application
+updateversion:  ## Update version info
 	@echo "Updating version info ..."
 	@pipenv run ribosome version update
+
+
+rund: clean updateversion  ## Run Django application
 	@echo "Running Django application ..."
 	@pipenv run ./djangosite/manage.py runserver
+
+
+runf: clean updateversion  ## Run Flask application
+	@echo "Running Flask application ..."
+	@FLASK_APP=flasksite.site:app FLASK_DEBUG=1 pipenv run flask run --host=0.0.0.0
 
 
 clean:  ## Remove bytecode, cache, build and run files

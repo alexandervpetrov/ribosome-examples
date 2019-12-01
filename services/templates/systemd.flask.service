@@ -2,7 +2,7 @@
 Description={{ description }}
 
 [Service]
-Type=notify
+Type=simple
 
 Restart=always
 RestartSec=2
@@ -13,17 +13,11 @@ Environment={{ k }}={{ v }}
 
 WorkingDirectory={{ WORKING_DIR }}
 
-ExecStart={{ PYTHON_CMD }} -m gunicorn.app.wsgiapp \
-  {{ WSGI_APPLICATION }} \
-  --bind unix:/run/{{ SOCKET_NAME }} \
-  --config {{ GUNICORN_CONFIG_PATH }} \
-  --access-logfile {{ LOGGING_DIR }}/{{ SERVICE }}.{{ CONFIG }}.access.log \
-  --error-logfile {{ LOGGING_DIR }}/{{ SERVICE }}.{{ CONFIG }}.error.log
+ExecStart={{ PYTHON_CMD }} -m flask run
 
 StandardOutput=append:{{ LOGGING_DIR }}/{{ SERVICE }}.{{ CONFIG }}.std.log
 StandardError=append:{{ LOGGING_DIR }}/{{ SERVICE }}.{{ CONFIG }}.std.log
 
-ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed
 TimeoutStopSec=3
 PrivateTmp=true

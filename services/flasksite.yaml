@@ -1,0 +1,16 @@
+
+common:
+  description: Sample Flask Web Application
+  WSGI_APPLICATION: flasksite.site:app
+
+
+configs:
+
+  flask-dev:
+    targetroot: /srv/ribosome-examples/flasksite/flask-dev
+    env:
+      FLASK_APP: flasksite.site:app
+
+  gunicorn-dev:
+    targetroot: /srv/ribosome-examples/flasksite/gunicorn-dev
+    SOCKET_NAME: ribosome-examples.flasksite.gunicorn-dev.socket

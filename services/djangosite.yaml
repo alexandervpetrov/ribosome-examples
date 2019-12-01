@@ -1,0 +1,23 @@
+
+common:
+  description: Sample Django Web Application
+  run: manage.py runserver
+  WSGI_APPLICATION: mysite.wsgi:application
+  DJANGO_MANAGE_ARGS: runserver
+
+  actions:
+    migrate: manage.py migrate
+
+
+configs:
+
+  django-dev:
+    targetroot: /srv/ribosome-examples/djangosite/django-dev
+    env:
+      DJANGO_SETTINGS_MODULE: mysite.settings
+
+  gunicorn-dev:
+    targetroot: /srv/ribosome-examples/djangosite/gunicorn-dev
+    SOCKET_NAME: ribosome-examples.djangosite.gunicorn-dev.socket
+    env:
+      DJANGO_SETTINGS_MODULE: mysite.settings

@@ -52,12 +52,18 @@ service:
       - $(pipenv --py) ./service.py do {service} {config} {action} {args}
 
 services:
-  webapp:
+  nginxmain:
     configs:
       - dev
   nginxsite:
     configs:
-      - dev
-  nginxmain:
+      - djangosite-gunicorn
+      - flasksite-gunicorn
+  djangosite:
     configs:
-      - dev
+      - django-dev
+      - gunicorn-dev
+  flasksite:
+    configs:
+      - flask-dev
+      - gunicorn-dev

@@ -12,6 +12,8 @@ import click
 import ruamel.yaml as ryaml
 import jinja2
 
+import meta
+
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -43,15 +45,19 @@ def load_settings(service, config):
         settings_common = descriptor.get('common', {})
         settings = deep_format(settings_common)
         settings.update(descriptor['configs'][config] or {})
+        settings['PROJECT'] = meta.project
+        settings['VERSION'] = meta.version
         settings['SERVICE'] = service
         settings['CONFIG'] = config
         settings['HOME'] = HERE
         settings['PYTHON_CMD'] = sys.executable
-        settings['LOGGING_DIR'] = '/var/log/example'
+        settings['WORKING_DIR'] = settings['HOME']
+        settings['LOGGING_DIR'] = os.path.join('/', 'var', 'log', meta.project)
         # settings['env']['LOG_CONFIG'] = os.path.join(os.getcwd(), 'services', 'logging', '{}.yaml'.format(settings['logconfig']))
         env_prefix = descriptor.get('env_prefix')
         if env_prefix:
             settings['env'] = {'{}_{}'.format(env_prefix, k): v for k, v in settings['env'].items()}
+        settings['env'] = settings.get('env', {})
         return settings, None
 
 
@@ -65,15 +71,16 @@ def render_template(localpath, context):
 
 
 def derive_systemd_name(service, config):
-    return 'example.{}.{}.service'.format(service, config)
+    return '{}.{}.{}'.format(meta.project, service, config)
 
 
-def systemd_service_path(service_name):
-    return os.path.join('/etc/systemd/system', service_name)
+def systemd_service_path(service_name, extension):
+    service_filename = '{}.{}'.format(service_name, extension)
+    return os.path.join('/etc/systemd/system', service_filename)
 
 
-def systemd_install(service_name, service_def):
-    systemd_path = systemd_service_path(service_name)
+def systemd_install(service_name, extension, service_def):
+    systemd_path = systemd_service_path(service_name, extension)
     try:
         with io.open(systemd_path, 'w', encoding='utf-8') as ostream:
             shutil.copyfileobj(io.StringIO(service_def), ostream)
@@ -84,8 +91,8 @@ def systemd_install(service_name, service_def):
         return None, 'Failed to install [{}]: {}'.format(service_name, e)
 
 
-def systemd_uninstall(service_name):
-    systemd_path = systemd_service_path(service_name)
+def systemd_uninstall(service_name, extension):
+    systemd_path = systemd_service_path(service_name, extension)
     try:
         if os.path.exists(systemd_path):
             subprocess.run('systemctl stop {}'.format(service_name).split(), check=True)
@@ -98,7 +105,7 @@ def systemd_uninstall(service_name):
         return None, 'Failed to uninstall [{}]: {}'.format(service_name, e)
 
 
-WAIT_FOR_STARTUP = 2.0  # second(s)
+WAIT_FOR_STARTUP = 1.0  # second(s)
 
 
 def systemd_start(service_name):
@@ -295,21 +302,74 @@ def install(service, config):
                         print_error('Failed to restore Nginx config:', e)
                         print_error('Nginx config left corrupted!')
                     raise
-        elif service in ('webapp',):
-            settings['GUNICORN_CMD'] = os.path.join(os.path.dirname(settings['PYTHON_CMD']), 'gunicorn')
-            settings['GUNICORN_CONFIG_PATH'] = os.path.join(settings['HOME'], 'services', 'gunicorn_config.py')
-            service_template_path = os.path.join('services', 'templates', 'systemd.gunicorn.service')
-            service_def = render_template(service_template_path, settings)
-            targetroot = settings['targetroot']
-            __, error = copy_files(os.path.join(HERE, 'djangosite', 'project_static'), targetroot)
-            if error is not None:
-                print_error(error)
-                sys.exit(1)
-            systemd_name = derive_systemd_name(service, config)
-            __, error = systemd_install(systemd_name, service_def)
-            if error is not None:
-                print_error(error)
-                sys.exit(1)
+        elif service in ('djangosite',):
+            settings['WORKING_DIR'] = os.path.join(settings['HOME'], 'djangosite')
+            ensure_dir_exists(settings['LOGGING_DIR'])
+            if config in ('gunicorn-dev',):
+                settings['GUNICORN_CMD'] = os.path.join(os.path.dirname(settings['PYTHON_CMD']), 'gunicorn')
+                settings['GUNICORN_CONFIG_PATH'] = os.path.join(settings['HOME'], 'services', 'gunicorn_config.py')
+                service_template_path = os.path.join('services', 'templates', 'systemd.gunicorn.service')
+                # socket_template_path = os.path.join('services', 'templates', 'systemd.gunicorn.socket')
+                service_def = render_template(service_template_path, settings)
+                # socket_def = render_template(socket_template_path, settings)
+                targetroot = settings['targetroot']
+                __, error = copy_files(os.path.join(HERE, 'djangosite', 'project_static'), targetroot)
+                if error is not None:
+                    print_error(error)
+                    sys.exit(1)
+                systemd_name = derive_systemd_name(service, config)
+                __, error = systemd_install(systemd_name, 'service', service_def)
+                # __, error = systemd_install(systemd_name, 'socket', socket_def)
+                if error is not None:
+                    print_error(error)
+                    sys.exit(1)
+            elif config in ('django-dev',):
+                service_template_path = os.path.join('services', 'templates', 'systemd.django.service')
+                service_def = render_template(service_template_path, settings)
+                targetroot = settings['targetroot']
+                __, error = copy_files(os.path.join(HERE, 'djangosite', 'project_static'), targetroot)
+                if error is not None:
+                    print_error(error)
+                    sys.exit(1)
+                systemd_name = derive_systemd_name(service, config)
+                __, error = systemd_install(systemd_name, 'service', service_def)
+                if error is not None:
+                    print_error(error)
+                    sys.exit(1)
+        elif service in ('flasksite',):
+            settings['WORKING_DIR'] = os.path.join(settings['HOME'])
+            ensure_dir_exists(settings['LOGGING_DIR'])
+            if config in ('gunicorn-dev',):
+                settings['GUNICORN_CMD'] = os.path.join(os.path.dirname(settings['PYTHON_CMD']), 'gunicorn')
+                settings['GUNICORN_CONFIG_PATH'] = os.path.join(settings['HOME'], 'services', 'gunicorn_config.py')
+                service_template_path = os.path.join('services', 'templates', 'systemd.gunicorn.service')
+                # socket_template_path = os.path.join('services', 'templates', 'systemd.gunicorn.socket')
+                service_def = render_template(service_template_path, settings)
+                # socket_def = render_template(socket_template_path, settings)
+                # targetroot = settings['targetroot']
+                # __, error = copy_files(os.path.join(HERE, 'djangosite', 'project_static'), targetroot)
+                # if error is not None:
+                #     print_error(error)
+                #     sys.exit(1)
+                systemd_name = derive_systemd_name(service, config)
+                __, error = systemd_install(systemd_name, 'service', service_def)
+                # __, error = systemd_install(systemd_name, 'socket', socket_def)
+                if error is not None:
+                    print_error(error)
+                    sys.exit(1)
+            elif config in ('flask-dev',):
+                service_template_path = os.path.join('services', 'templates', 'systemd.flask.service')
+                service_def = render_template(service_template_path, settings)
+                # targetroot = settings['targetroot']
+                # __, error = copy_files(os.path.join(HERE, 'djangosite', 'project_static'), targetroot)
+                # if error is not None:
+                #     print_error(error)
+                #     sys.exit(1)
+                systemd_name = derive_systemd_name(service, config)
+                __, error = systemd_install(systemd_name, 'service', service_def)
+                if error is not None:
+                    print_error(error)
+                    sys.exit(1)
         elif service in ('taskplanner', 'taskworker'):
             settings['CELERY_CMD'] = os.path.join(os.path.dirname(settings['PYTHON_CMD']), 'celery')
             service_template_path = os.path.join('services', 'templates', 'systemd.celery.service')
@@ -344,9 +404,10 @@ def uninstall(service, config):
             reload_nginx_config()
         elif service == 'nginxmain':
             print('Fake uninstall of nginxmain')
-        elif service in ('webapp', 'taskplanner', 'taskworker'):
+        elif service in ('flasksite', 'djangosite', 'taskplanner', 'taskworker'):
             systemd_name = derive_systemd_name(service, config)
-            __, error = systemd_uninstall(systemd_name)
+            __, error = systemd_uninstall(systemd_name, 'service')
+            __, error = systemd_uninstall(systemd_name, 'socket')
             if error is not None:
                 print_error(error)
                 sys.exit(1)
@@ -364,7 +425,7 @@ def uninstall(service, config):
 def start(service, config):
     """Start systemd service"""
     print('Starting service [{}] for config [{}]...'.format(service, config))
-    if service in ('webapp', 'taskplanner', 'taskworker'):
+    if service in ('flasksite', 'djangosite', 'taskplanner', 'taskworker'):
         systemd_name = derive_systemd_name(service, config)
         __, error = systemd_start(systemd_name)
         if error is not None:
@@ -379,7 +440,7 @@ def start(service, config):
 def stop(service, config):
     """Stop systemd service"""
     print('Stopping service [{}] for config [{}]...'.format(service, config))
-    if service in ('webapp', 'taskplanner', 'taskworker'):
+    if service in ('flasksite', 'djangosite', 'taskplanner', 'taskworker'):
         systemd_name = derive_systemd_name(service, config)
         __, error = systemd_stop(systemd_name)
         if error is not None:

@@ -1,12 +1,19 @@
 
 common:
   mkdirs:
-    - /var/log/nginx/example/
+    - /var/log/nginx/ribosome-examples/
 
 
 configs:
 
-  dev:
+  djangosite-gunicorn:
+    includes:
+      - static.conf
+    certs:
+      - site.crt
+      - site.key
+
+  flasksite-gunicorn:
     includes:
       - static.conf
     certs:

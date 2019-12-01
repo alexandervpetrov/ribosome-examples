@@ -1,0 +1,36 @@
+[Unit]
+Description={{ description }}
+Requires={{ PROJECT }}.{{ SERVICE }}.{{ CONFIG }}.socket
+After=network.target
+
+[Service]
+Type=notify
+
+Restart=always
+RestartSec=2
+
+{% for k, v in env.items() -%}
+Environment={{ k }}={{ v }}
+{%- endfor %}
+
+WorkingDirectory={{ HOME }}
+
+ExecStartPre=/bin/mkdir -p /var/log/{{ PROJECT }}
+ExecStartPre=/bin/mkdir -p /var/log/gunicorn/{{ PROJECT }}
+
+ExecStart={{ GUNICORN_CMD }} \
+  {{ WSGI_MODULE }}:application \
+  --config {{ GUNICORN_CONFIG_PATH }} \
+  --access-logfile /var/log/gunicorn/{{ PROJECT }}/{{ SERVICE }}.{{ CONFIG }}.access.log \
+  --error-logfile /var/log/gunicorn/{{ PROJECT }}/{{ SERVICE }}.{{ CONFIG }}.error.log
+
+StandardOutput=append:/var/log/{{ PROJECT }}/{{ SERVICE }}.{{ CONFIG }}.log
+StandardError=append:/var/log/{{ PROJECT }}/{{ SERVICE }}.{{ CONFIG }}.log
+
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=3
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
