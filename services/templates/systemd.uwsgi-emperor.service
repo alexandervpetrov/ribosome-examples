@@ -1,0 +1,15 @@
+[Unit]
+Description=uWSGI Emperor
+After=syslog.target
+
+[Service]
+ExecStart=/home/alex/.local/share/virtualenvs/ribosome-examples-aG_jUtQP/bin/uwsgi --ini /etc/uwsgi-emperor/emperor.ini
+RuntimeDirectory=uwsgi
+Restart=always
+KillSignal=SIGQUIT
+Type=notify
+StandardError=syslog
+NotifyAccess=all
+
+[Install]
+WantedBy=multi-user.target

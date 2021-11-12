@@ -59,6 +59,7 @@ services:
     configs:
       - djangosite-gunicorn
       - flasksite-gunicorn
+      - flasksite-uwsgi
   djangosite:
     configs:
       - django-dev

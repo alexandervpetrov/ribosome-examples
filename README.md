@@ -6,6 +6,8 @@ release process interface implementation for Nginx and Django.
 
 ## Prerequisites
 
+    sudo apt install libpcre3 libpcre3-dev
+
 Install [pyenv](https://github.com/pyenv/pyenv):
 packages needed to build Python by [this guide](https://askubuntu.com/a/865644)
 and then use [pyenv-installer](https://github.com/pyenv/pyenv-installer#installation--update--uninstallation).

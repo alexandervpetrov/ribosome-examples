@@ -19,3 +19,10 @@ configs:
     certs:
       - site.crt
       - site.key
+
+  flasksite-uwsgi:
+    includes:
+      - static.conf
+    certs:
+      - site.crt
+      - site.key

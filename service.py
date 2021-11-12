@@ -357,6 +357,24 @@ def install(service, config):
                 if error is not None:
                     print_error(error)
                     sys.exit(1)
+            elif config in ('uwsgi-dev',):
+                settings['UWSGI_CMD'] = os.path.join(os.path.dirname(settings['PYTHON_CMD']), 'uwsgi')
+                settings['UWSGI_CONFIG_PATH'] = os.path.join(settings['HOME'], 'test.ini')
+                service_template_path = os.path.join('services', 'templates', 'systemd.uwsgi.service')
+                # socket_template_path = os.path.join('services', 'templates', 'systemd.gunicorn.socket')
+                service_def = render_template(service_template_path, settings)
+                # socket_def = render_template(socket_template_path, settings)
+                # targetroot = settings['targetroot']
+                # __, error = copy_files(os.path.join(HERE, 'djangosite', 'project_static'), targetroot)
+                # if error is not None:
+                #     print_error(error)
+                #     sys.exit(1)
+                systemd_name = derive_systemd_name(service, config)
+                __, error = systemd_install(systemd_name, 'service', service_def)
+                # __, error = systemd_install(systemd_name, 'socket', socket_def)
+                if error is not None:
+                    print_error(error)
+                    sys.exit(1)
             elif config in ('flask-dev',):
                 service_template_path = os.path.join('services', 'templates', 'systemd.flask.service')
                 service_def = render_template(service_template_path, settings)

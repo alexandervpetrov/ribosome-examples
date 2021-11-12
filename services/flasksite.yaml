@@ -14,3 +14,9 @@ configs:
   gunicorn-dev:
     targetroot: /srv/ribosome-examples/flasksite/gunicorn-dev
     SOCKET_NAME: ribosome-examples.flasksite.gunicorn-dev.socket
+
+  uwsgi-dev:
+    targetroot: /srv/ribosome-examples/flasksite/uwsgi-dev
+    SOCKET_NAME: ribosome-examples.flasksite.uwsgi-dev.socket
+    env:
+      a: a

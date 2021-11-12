@@ -1,0 +1,38 @@
+[Unit]
+Description={{ description }}
+
+[Service]
+Type=notify
+
+# Restart=always
+Restart=on-failure
+RestartSec=2
+
+{% for k, v in env.items() -%}
+Environment={{ k }}={{ v }}
+{%- endfor %}
+
+# User=www-data
+# Group=www-data
+
+RuntimeDirectory=uwsgi
+# RuntimeDirectoryMode=0777
+
+WorkingDirectory={{ WORKING_DIR }}
+
+ExecStart={{ UWSGI_CMD }} \
+  --ini {{ UWSGI_CONFIG_PATH }}
+
+StandardOutput=append:{{ LOGGING_DIR }}/{{ SERVICE }}.{{ CONFIG }}.std.log
+StandardError=append:{{ LOGGING_DIR }}/{{ SERVICE }}.{{ CONFIG }}.std.log
+
+# ExecReload=/bin/kill -s HUP $MAINPID
+# KillMode=mixed
+# TimeoutStopSec=3
+# PrivateTmp=true
+
+KillSignal=SIGQUIT
+NotifyAccess=all
+
+[Install]
+WantedBy=multi-user.target
